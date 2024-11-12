@@ -37,6 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # for django channels for websocket
+    'channels',
+    #  app
+    'stock',
 ]
 
 MIDDLEWARE = [
@@ -67,7 +71,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'stockMonitoringSystem.wsgi.application'
+# WSGI_APPLICATION = 'stockMonitoringSystem.wsgi.application'
+ASGI_APPLICATION = 'stockMonitoringSystem.asgi.application'
 
 
 # Database
