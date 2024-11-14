@@ -18,8 +18,11 @@ class stockMonitoring(WebsocketConsumer):
 
 
     # when user send data
-    def receive(self, text):
-        pass
+    def receive(self, data):
+        data = json.loads(data)
+        action = data.get("action")
+        channel = data.get("channel")
+
 
 
 
