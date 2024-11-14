@@ -18,15 +18,17 @@ class stockMonitoring(WebsocketConsumer):
 
 
     # when user send data
-    def receive(self, data):
-        data = json.loads(data)
-        action = data.get("action")
-        channel = data.get("channel")
+    def receive(self, text_data):
+        data = json.loads(text_data)
+        print(data)
+        self.send(text_data=json.dumps({  # json dumps will convert dictionary to JSON
+            'message': 'got the msg '
+        }))
 
 
 
 
     def disconnect(self, close_code):
         # close_code return the code which can be used to return the message on disconnect
-        pass
+        print('disconnected')
     
