@@ -19,17 +19,22 @@ class stockMonitoring(AsyncWebsocketConsumer):
         }))
 
 
+
+
+
     # when user send data
     async def receive(self, text_data):
         data = json.loads(text_data)
 
 
         if data['action'] == 'subscribe':
+
             if data['channel'] == 'stock_update' : 
-                pass
+                stocks = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS"]
+                self.subscribed = True
+                asyncio.create_task(self.stockUpdates(stocks))
 
                 
-
             elif data['channel'] == 'price_updates':
                 stocks = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS"]
                 self.subscribed = True
@@ -37,21 +42,27 @@ class stockMonitoring(AsyncWebsocketConsumer):
 
 
             elif data['channel'] == 'new_product_arrivals':
-                # Send new product arrival notifications
                 pass
             elif data['channel'] == 'order_status_updates':
-                # Send order status updates
                 pass
         
 
 
 
-        if data['action'] == 'unsubscribe':
+        elif data['action'] == 'unsubscribe':
             if data['channel'] == 'stock_update' : 
                 self.subscribed=False
                 await self.send(text_data=json.dumps({ 
                     'message': 'unsubscribed successfully '
                 }))
+
+
+
+        else:
+            await self.send(text_data=json.dumps({ 
+                    'message': 'please enter valid data'
+            }))
+
 
 
 

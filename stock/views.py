@@ -5,9 +5,11 @@ import yfinance as yf
 
 
 
-# Create your views here.
+
 def home(request):
     return HttpResponse('Hello Welcome')
+
+
 
 def subscribe(request):
     # data = tickers_nifty50()
@@ -17,6 +19,8 @@ def subscribe(request):
     data = {ticker: yf.Ticker(ticker).info for ticker in nifty50_tickers}
     print(data)
     return render(request, 'subscribe.html',{'data':nifty50_tickers})
+
+
 
 def update(request):
     s = request.GET.getlist('subscribe')
