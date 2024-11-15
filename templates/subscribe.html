@@ -10,20 +10,22 @@
 
             <h2> Subscribe </h2>
 
-            <select class="form-select" multiple aria-label="Multiple select example">
-                {% comment %} <option selected>Open this select menu</option>
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option> {% endcomment %}
-                {% for ticker in data %}
-                <option value={ticker}>{{ ticker }}</option>
-                {% endfor %}
-              </select>
+            <form action="/update">
+                <select class="form-select" multiple aria-label="Multiple select example" name="subscribe">
+                    {% comment %} <option selected>Open this select menu</option>
+                    <option value="1">One</option>
+                    <option value="2">Two</option>
+                    <option value="3">Three</option> {% endcomment %}
+                    {% for ticker in data %}
+                    <option value={ticker}>{{ ticker }}</option>
+                    {% endfor %}
+                </select>
 
-              <div class="d-grid gap-2">
-                <button class="btn btn-primary" type="submit" value="Submit">Subscribe</button>
-              </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" type="submit" value="Submit">Subscribe</button>
+                </div>
 
+            </form>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

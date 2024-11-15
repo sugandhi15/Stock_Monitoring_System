@@ -1,34 +1,87 @@
 import json
-from channels.generic.websocket import WebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer
+# from asgiref.sync import async_to_sync
+# from channels.layers import get_channel_layer
+import datetime
+import yfinance as yf
+import asyncio
 
 
 
+class stockMonitoring(AsyncWebsocketConsumer):
 
-class stockMonitoring(WebsocketConsumer):
 
-
-    def connect(self):
-        #  accept accepts the request to connect
-        self.accept()
-        # text_data sends text data in response we also have bytes_data
-        self.send(text_data=json.dumps({  # json dumps will convert dictionary to JSON
+    async def connect(self):
+        await self.accept()
+        self.subsrcribed = False
+        await self.send(text_data=json.dumps({
             'message': 'Hello there! '
         }))
-    
 
 
     # when user send data
-    def receive(self, text_data):
+    async def receive(self, text_data):
         data = json.loads(text_data)
-        print(data)
-        self.send(text_data=json.dumps({  # json dumps will convert dictionary to JSON
-            'message': 'got the msg '
-        }))
+
+
+        if data['action'] == 'subscribe':
+            if data['channel'] == 'stock_update' : 
+                pass
+
+                
+
+            elif data['channel'] == 'price_updates':
+                stocks = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS"]
+                self.subscribed = True
+                asyncio.create_task(self.priceUpdates(stocks))
+
+
+            elif data['channel'] == 'new_product_arrivals':
+                # Send new product arrival notifications
+                pass
+            elif data['channel'] == 'order_status_updates':
+                # Send order status updates
+                pass
+        
 
 
 
+        if data['action'] == 'unsubscribe':
+            if data['channel'] == 'stock_update' : 
+                self.subscribed=False
+                await self.send(text_data=json.dumps({ 
+                    'message': 'unsubscribed successfully '
+                }))
 
-    def disconnect(self, close_code):
-        # close_code return the code which can be used to return the message on disconnect
+
+
+    async def disconnect(self, close_code):
+        self.subscribed=False
         print('disconnected')
     
+
+
+
+
+
+    async def priceUpdates(self, stocks):
+            last_prices = {}
+            while self.subscribed: 
+                for stock in stocks:
+                    try:
+                        ticker = yf.Ticker(stock)
+                        current_price = ticker.info.get('currentPrice')
+
+                        if last_prices.get(stock) != current_price:
+                            last_prices[stock] = current_price
+                            await self.send(text_data=json.dumps({
+                                'stock': stock,
+                                'price': current_price,
+                                "last_updated": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+                            }))
+                    except Exception as e:
+                        await self.send(text_data=json.dumps({
+                            'error': f"Failed to fetch data for {stock}: {str(e)}"
+                        }))
+
+                await asyncio.sleep(10)
