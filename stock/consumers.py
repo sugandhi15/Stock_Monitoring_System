@@ -47,8 +47,6 @@ class stockMonitoring(AsyncWebsocketConsumer):
                 pass
         
 
-
-
         elif data['action'] == 'unsubscribe':
             if data['channel'] == 'stock_update' : 
                 self.subscribed=False

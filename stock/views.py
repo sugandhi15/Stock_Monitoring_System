@@ -12,13 +12,15 @@ def home(request):
 
 
 def subscribe(request):
-    # data = tickers_nifty50()
-    nifty50_tickers = [
-            "RELIANCE.NS", "TCS.NS", "HDFCBANK.NS",
-        ]
-    data = {ticker: yf.Ticker(ticker).info for ticker in nifty50_tickers}
-    print(data)
-    return render(request, 'subscribe.html',{'data':nifty50_tickers})
+
+    if request.method == 'GET':
+        nifty50_tickers = [
+                "RELIANCE.NS", "TCS.NS", "HDFCBANK.NS",
+            ]
+        return render(request, 'subscribe.html',{'data':nifty50_tickers})
+    
+    if request.method == 'POST':
+        pass
 
 
 
@@ -31,7 +33,6 @@ def update(request):
     current_price = stock_info.get("currentPrice")
 
     context = {
-        # "stock":"RELIANCE.NS",
         "current_price": current_price,
     }
     print(context)
