@@ -94,3 +94,4 @@ class stockMonitoring(AsyncWebsocketConsumer):
                         }))
 
                 await asyncio.sleep(10)
+
