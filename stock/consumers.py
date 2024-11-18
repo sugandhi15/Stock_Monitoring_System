@@ -5,7 +5,6 @@ import asyncio
 import random
 
 
-
 # generating changing price for testing
 def generateRandomPrice():
     price = random.uniform(0,1000)
@@ -15,6 +14,7 @@ def generateRandomPrice():
 
 class stockMonitoring(AsyncWebsocketConsumer):
 
+    activeTask = None
 
     async def connect(self):
         await self.accept()
@@ -28,20 +28,21 @@ class stockMonitoring(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)  # converts json to python object
-
+        if self.activeTask:
+            self.activeTask.cancel()
 
         if data['action'] == 'subscribe':
 
             if data['channel'] == 'stock_update' : 
                 stocks = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS"]
                 self.subscribed = True
-                asyncio.create_task(self.stockUpdates(stocks))   # create_task runs task in background and loops
+                self.activeTask =asyncio.create_task(self.stockUpdates(stocks))   # create_task runs task in background and loops
 
                 
-            elif data['channel'] == 'price_updates':
+            if data['channel'] == 'price_update':
                 stocks = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS"]
                 self.subscribed = True
-                asyncio.create_task(self.priceUpdates(stocks))
+                self.activeTask =asyncio.create_task(self.priceUpdates(stocks))
 
 
         elif data['action'] == 'unsubscribe':
@@ -67,68 +68,68 @@ class stockMonitoring(AsyncWebsocketConsumer):
 
 
     async def stockUpdates(self,stocks):
-            last_prices = {}
-            while self.subscribed: 
-                for stock in stocks:
-                    try:
-                        ticker = yf.Ticker(stock)
-                        info = ticker.info
-                        # current_price = info.get('currentPrice')
-                        # for testing use this to get  changing random data
-                        current_price = generateRandomPrice()
+        last_prices = {}
+        while self.subscribed: 
+            for stock in stocks:
+                try:
+                    ticker = yf.Ticker(stock)
+                    info = ticker.info
+                    # current_price = info.get('currentPrice')
+                    # for testing use this to get  changing random data
+                    current_price = generateRandomPrice()
 
-                        previous_close = info.get('previousClose')
-                        market_cap = info.get('marketCap')
-                        pe_ratio = info.get('trailingPE')
-                        high = info.get('dayHigh')
-                        low = info.get('dayLow')
-                        volume = info.get('volume')
+                    previous_close = info.get('previousClose')
+                    market_cap = info.get('marketCap')
+                    pe_ratio = info.get('trailingPE')
+                    high = info.get('dayHigh')
+                    low = info.get('dayLow')
+                    volume = info.get('volume')
 
-                        if last_prices.get(stock) != current_price:
-                            last_prices[stock] = current_price
-                            await self.send(text_data=json.dumps({
-                                'stock': stock,
-                                'price': current_price,
-                                'previous_close': previous_close,
-                                'market_cap': market_cap,
-                                'pe_ratio': pe_ratio,
-                                'high': high,
-                                'low': low,
-                                'volume': volume,
-                            }))
-                    except Exception as e:
+                    if last_prices.get(stock) != current_price:
+                        last_prices[stock] = current_price
                         await self.send(text_data=json.dumps({
-                            'error': f"Failed to fetch data for {stock}: {str(e)}"
+                            'stock': stock,
+                            'price': current_price,
+                            'previous_close': previous_close,
+                            'market_cap': market_cap,
+                            'pe_ratio': pe_ratio,
+                            'high': high,
+                            'low': low,
+                            'volume': volume,
                         }))
+                except Exception as e:
+                    await self.send(text_data=json.dumps({
+                        'error': f"Failed to fetch data for {stock}: {str(e)}"
+                    }))
 
-                await asyncio.sleep(2)   # stops in seconds
+            await asyncio.sleep(2)   # stops in seconds
 
 
 
 
 
     async def priceUpdates(self, stocks):
-            last_prices = {}
-            while self.subscribed: 
-                for stock in stocks:
-                    try:
-                        ticker = yf.Ticker(stock)
-                        # current_price = ticker.info.get('currentPrice')
-                        # for testing use this to get  changing random data
-                        current_price = generateRandomPrice()
+        last_prices = {}
+        while self.subscribed: 
+            for stock in stocks:
+                try:
+                    ticker = yf.Ticker(stock)
+                    # current_price = ticker.info.get('currentPrice')
+                    # for testing use this to get  changing random data
+                    current_price = generateRandomPrice()
 
-                        if last_prices.get(stock) != current_price:
-                            last_prices[stock] = current_price
-                            await self.send(text_data=json.dumps({
-                                'stock': stock,
-                                'price': current_price
-                            }))
-                    except Exception as e:
+                    if last_prices.get(stock) != current_price:
+                        last_prices[stock] = current_price
                         await self.send(text_data=json.dumps({
-                            'error': f"Failed to fetch data for {stock}: {str(e)}"
+                            'stock': stock,
+                            'price': current_price
                         }))
+                except Exception as e:
+                    await self.send(text_data=json.dumps({
+                        'error': f"Failed to fetch data for {stock}: {str(e)}"
+                    }))
 
-                await asyncio.sleep(2)
+            await asyncio.sleep(2)
 
 
 
