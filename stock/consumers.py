@@ -27,36 +27,41 @@ class stockMonitoring(AsyncWebsocketConsumer):
 
 
     async def receive(self, text_data):
-        data = json.loads(text_data)  # converts json to python object
-        if self.activeTask:
-            self.activeTask.cancel()
+        try:
+            data = json.loads(text_data)  # converts json to python object
+            if self.activeTask:
+                self.activeTask.cancel()
 
-        if data['action'] == 'subscribe':
+            if data['action'] == 'subscribe':
 
-            if data['channel'] == 'stock_update' : 
-                stocks = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS"]
-                self.subscribed = True
-                self.activeTask =asyncio.create_task(self.stockUpdates(stocks))   # create_task runs task in background and loops
+                if data['channel'] == 'stock_update' : 
+                    stocks = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS"]
+                    self.subscribed = True
+                    self.activeTask =asyncio.create_task(self.stockUpdates(stocks))   # create_task runs task in background and loops
 
-                
-            if data['channel'] == 'price_update':
-                stocks = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS"]
-                self.subscribed = True
-                self.activeTask =asyncio.create_task(self.priceUpdates(stocks))
+                    
+                if data['channel'] == 'price_update':
+                    stocks = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS"]
+                    self.subscribed = True
+                    self.activeTask =asyncio.create_task(self.priceUpdates(stocks))
 
 
-        elif data['action'] == 'unsubscribe':
-            if data['channel'] == 'stock_update' : 
-                self.subscribed=False
+            elif data['action'] == 'unsubscribe':
+                if data['channel'] == 'stock_update' : 
+                    self.subscribed=False
+                    await self.send(text_data=json.dumps({ 
+                        'message': 'unsubscribed successfully '
+                    }))
+
+
+
+            else:
                 await self.send(text_data=json.dumps({ 
-                    'message': 'unsubscribed successfully '
+                        'message': 'please enter valid data'
                 }))
-
-
-
-        else:
-            await self.send(text_data=json.dumps({ 
-                    'message': 'please enter valid data'
+        except Exception as e:
+            await self.send(text_data=json.dumps({
+                'error': "Error Occured"
             }))
 
 
@@ -99,7 +104,7 @@ class stockMonitoring(AsyncWebsocketConsumer):
                         }))
                 except Exception as e:
                     await self.send(text_data=json.dumps({
-                        'error': f"Failed to fetch data for {stock}: {str(e)}"
+                        'error': "Error Occured"
                     }))
 
             await asyncio.sleep(2)   # stops in seconds
@@ -126,7 +131,7 @@ class stockMonitoring(AsyncWebsocketConsumer):
                         }))
                 except Exception as e:
                     await self.send(text_data=json.dumps({
-                        'error': f"Failed to fetch data for {stock}: {str(e)}"
+                        'error': "Error Occured"
                     }))
 
             await asyncio.sleep(2)
