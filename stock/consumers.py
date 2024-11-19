@@ -3,7 +3,8 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 import yfinance as yf
 import asyncio
 import random
-
+from django.conf import settings
+import jwt
 
 # generating changing price for testing
 def generateRandomPrice():
@@ -17,11 +18,33 @@ class stockMonitoring(AsyncWebsocketConsumer):
     activeTask = None
 
     async def connect(self):
-        await self.accept()
-        self.subsrcribed = False
-        await self.send(text_data=json.dumps({   # json.dumps convert python dict to json
-            'message': 'Connected Successsfully! '
-        }))
+        try:
+            await self.accept()
+            token = self.scope['query_string'].decode('utf-8').split('=')[-1]
+            print(token)
+        # try:
+            decoded_token = jwt.decode(
+                token,
+                settings.SECRET_KEY,
+                algorithms=["HS256"]
+            )
+            print(decoded_token)
+            self.user = decoded_token['user_id'] 
+
+            if not self.user:
+                await self.send(text_data=json.dumps({
+                    'message':'Error Occured'
+                }))
+
+            print(self.user)
+            self.subsrcribed = False
+            await self.send(text_data=json.dumps({   # json.dumps convert python dict to json
+                'message': 'Connected Successsfully! '
+            }))
+        except Exception as e:
+            await self.send(text_data=json.dumps({
+                'message':"Error Occured"
+            }))
 
 
 
@@ -31,7 +54,6 @@ class stockMonitoring(AsyncWebsocketConsumer):
             data = json.loads(text_data)  # converts json to python object
             if self.activeTask:
                 self.activeTask.cancel()
-
             if data['action'] == 'subscribe':
 
                 if data['channel'] == 'stock_update' : 
@@ -40,11 +62,15 @@ class stockMonitoring(AsyncWebsocketConsumer):
                     self.activeTask =asyncio.create_task(self.stockUpdates(stocks))   # create_task runs task in background and loops
 
                     
-                if data['channel'] == 'price_update':
+                elif data['channel'] == 'price_update':
                     stocks = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS"]
                     self.subscribed = True
                     self.activeTask =asyncio.create_task(self.priceUpdates(stocks))
 
+                else:
+                    self.send(text_data=json.dumps({
+                        'message':'Plese enter valid channel'
+                    }))
 
             elif data['action'] == 'unsubscribe':
                 if data['channel'] == 'stock_update' : 
@@ -53,12 +79,16 @@ class stockMonitoring(AsyncWebsocketConsumer):
                         'message': 'unsubscribed successfully '
                     }))
 
-
+                else:
+                    self.send(text_data=json.dumps({
+                        'message':'Plese enter valid channel'
+                    }))
 
             else:
                 await self.send(text_data=json.dumps({ 
                         'message': 'please enter valid data'
                 }))
+
         except Exception as e:
             await self.send(text_data=json.dumps({
                 'error': "Error Occured"
@@ -67,8 +97,11 @@ class stockMonitoring(AsyncWebsocketConsumer):
 
 
     async def disconnect(self, close_code):
-        self.subscribed=False
-        print('disconnected')
+        try:
+            self.subscribed=False
+            print('disconnected')
+        except Exception as e:
+            print("Error occured")
     
 
 
@@ -102,6 +135,10 @@ class stockMonitoring(AsyncWebsocketConsumer):
                             'low': low,
                             'volume': volume,
                         }))
+
+                    else:
+                        pass
+
                 except Exception as e:
                     await self.send(text_data=json.dumps({
                         'error': "Error Occured"
@@ -129,6 +166,10 @@ class stockMonitoring(AsyncWebsocketConsumer):
                             'stock': stock,
                             'price': current_price
                         }))
+                    
+                    else:
+                        pass
+                    
                 except Exception as e:
                     await self.send(text_data=json.dumps({
                         'error': "Error Occured"

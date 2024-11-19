@@ -1,14 +1,46 @@
 from django.shortcuts import render,HttpResponse
 # from yahoo_fin.stock_info import *
 import yfinance as yf
-
-
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from .serializers import UserSerializer
+from rest_framework.response import Response
 
 
 
 def home(request):
     return HttpResponse('Hello Welcome')
 
+
+
+class signup(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self,request):
+        try:
+            username = request.data['username']
+            password = request.data['password']
+            email = request.data['email']
+            data = {
+                'username': username,
+                'password': password,
+                'email': email,
+            }
+            serializer = UserSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({
+                    "msg": "Signed up successfully"
+                })
+            else:
+                return Response({
+                    "msg":"error occured"
+                })
+            
+        except Exception as e:
+            return Response({
+                "msg":str(e)
+            })
 
 
 def subscribe(request):
