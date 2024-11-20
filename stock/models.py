@@ -33,6 +33,12 @@ class CustomUserManager(BaseUserManager):
     
 
 
+class availableStocks(models.TextChoices):
+    RELIANCE = "RELIANCE.NS"
+    TCS = "TCS.NS"
+    HDFCBANK = "HDFCBANK.NS"
+
+
 
 class User(AbstractBaseUser,PermissionsMixin):
     username = models.CharField(max_length=20)

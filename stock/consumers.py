@@ -5,6 +5,8 @@ import asyncio
 import random
 from django.conf import settings
 import jwt
+from .models import User
+from asgiref.sync import sync_to_async
 
 # generating changing price for testing
 def generateRandomPrice():
@@ -21,14 +23,11 @@ class stockMonitoring(AsyncWebsocketConsumer):
         try:
             await self.accept()
             token = self.scope['query_string'].decode('utf-8').split('=')[-1]
-            print(token)
-        # try:
             decoded_token = jwt.decode(
                 token,
                 settings.SECRET_KEY,
                 algorithms=["HS256"]
             )
-            print(decoded_token)
             self.user = decoded_token['user_id'] 
 
             if not self.user:
@@ -36,14 +35,13 @@ class stockMonitoring(AsyncWebsocketConsumer):
                     'message':'Error Occured'
                 }))
 
-            print(self.user)
             self.subsrcribed = False
             await self.send(text_data=json.dumps({   # json.dumps convert python dict to json
                 'message': 'Connected Successsfully! '
             }))
         except Exception as e:
             await self.send(text_data=json.dumps({
-                'message':"Error Occured"
+                'message':str(e)
             }))
 
 
@@ -91,7 +89,7 @@ class stockMonitoring(AsyncWebsocketConsumer):
 
         except Exception as e:
             await self.send(text_data=json.dumps({
-                'error': "Error Occured"
+                'error': str(e)
             }))
 
 

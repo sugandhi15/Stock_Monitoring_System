@@ -1,11 +1,10 @@
-from django.shortcuts import render,HttpResponse
+from django.shortcuts import render,HttpResponse,redirect
 # from yahoo_fin.stock_info import *
 import yfinance as yf
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from .serializers import UserSerializer
 from rest_framework.response import Response
-
 
 
 def home(request):
@@ -16,25 +15,30 @@ def home(request):
 class signup(APIView):
     permission_classes = (AllowAny,)
 
+    def get(self,request):
+            return render(request,'signup.html')
+
     def post(self,request):
         try:
-            username = request.data['username']
-            password = request.data['password']
-            email = request.data['email']
-            data = {
-                'username': username,
-                'password': password,
-                'email': email,
-            }
-            serializer = UserSerializer(data=data)
+            # username = request.data['username']
+            # password = request.data['password']
+            # email = request.data['email']
+            # data = {
+            #     'username': username,
+            #     'password': password,
+            #     'email': email,
+            # }
+            print("working")
+            serializer = UserSerializer(data=request.data)
+            print(serializer)
             if serializer.is_valid():
+                print("validated")
                 serializer.save()
-                return Response({
-                    "msg": "Signed up successfully"
-                })
+                # return HttpResponse("Signed up successfully")
+                return redirect("http://127.0.0.1:8000/login/")
             else:
                 return Response({
-                    "msg":"error occured"
+                    "msg":"Please enter valid data"
                 })
             
         except Exception as e:
@@ -43,30 +47,20 @@ class signup(APIView):
             })
 
 
-def subscribe(request):
-
-    if request.method == 'GET':
-        nifty50_tickers = [
-                "RELIANCE.NS", "TCS.NS", "HDFCBANK.NS",
-            ]
-        return render(request, 'subscribe.html',{'data':nifty50_tickers})
-    
-    if request.method == 'POST':
-        pass
 
 
+def chart(request):
+    token  = request.GET.get('token')
+    if token:
+        if request.method == 'GET':
+                return render(request, 'chart.html',{"token":token})
+        else:
+            return Response({
+                "message":"Error occured"
+        })
+    else:
+        return Response({
+            "message":"please pass jwt token as query parameter"
+        })
 
-def update(request):
-    s = request.GET.getlist('subscribe')
-    print(s)
-    stock = yf.Ticker('RELIANCE.NS')
-
-    stock_info = stock.info
-    current_price = stock_info.get("currentPrice")
-
-    context = {
-        "current_price": current_price,
-    }
-    print(context)
-    return render(request,'stocks.html',context)
 
