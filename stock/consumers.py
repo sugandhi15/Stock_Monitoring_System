@@ -5,8 +5,6 @@ import asyncio
 import random
 from django.conf import settings
 import jwt
-from .models import User
-from asgiref.sync import sync_to_async
 
 # generating changing price for testing
 def generateRandomPrice():
