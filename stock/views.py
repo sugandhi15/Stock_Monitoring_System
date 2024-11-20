@@ -35,7 +35,7 @@ class signup(APIView):
                 print("validated")
                 serializer.save()
                 # return HttpResponse("Signed up successfully")
-                return redirect("http://127.0.0.1:8000/login/")
+                return redirect("https://stock-monitoring-system.onrender.com/login/")
             else:
                 return Response({
                     "msg":"Please enter valid data"
